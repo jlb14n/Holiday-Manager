@@ -27,14 +27,14 @@ class HolidayList:
     #Adds holiday to .innerHolidays parameter.
     #Inputs - new_holiday: Holiday Object
     def addHoliday(self,new_holiday):
-        if type(new_holiday)==type(Holiday('test',datetime.date.today())): #checking if new_holiday is an object !!!!!isinstance()#=================================================================================================================================
+        if isinstance(new_holiday,Holiday): #Checking new_holiday is a Holiday object
             if new_holiday not in self.innerHolidays: #checking if unique holiday
                 self.innerHolidays.append(new_holiday)
                 print("Inserted object!") #=================================================================================================================================
             else:
                 print("This holiday is already in!") #=================================================================================================================================
         else:
-            print("Not an object!") #============================================================================================================================================
+            print("Not a Holiday object!") #============================================================================================================================================
     
     #Outputs Holiday object from .innerHolidays
     #Inputs - HolidayName: str, Date: datetime.date.
@@ -53,14 +53,14 @@ class HolidayList:
             print("Could not find Holiday") #=================================================================================================================================
     
     #Adds holidays into .innerHolidays from a file
-    #Inputs - filelocation: a json file path
+    #Inputs - filelocation: str (a json file path)
     def read_json(self,filelocation): #default: holidays_output.json
         with open(filelocation,"r") as f:
             for holiday in json.loads(f.read())['holidays']:
                 self.addHoliday(Holiday(holiday['name'],datetime.date.fromisoformat(holiday['date'])))
 
-    #Writes .innerHolidays into a json file
-    #inputs - filelocation: a json file path
+    #Writes .innerHolidays parameter into a json file
+    #inputs - filelocation: str (a json file path)
     def save_to_json(self,filelocation):
         with open(filelocation,"w") as f:
             holidays={"holidays":[]}
@@ -70,10 +70,8 @@ class HolidayList:
 
 holidayList=HolidayList()
 holidayList.read_json("holidays.json")
-# print(holidayList.innerHolidays)
+holidayList.addHoliday(100)
 holidayList.save_to_json('holidays_output.json')
-print(holidayList.innerHolidays[0].__dict__)
-
 
     # def scrapeHolidays(self):
     #     # Define years list (202,2021,2022,2023,2024)
