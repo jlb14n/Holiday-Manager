@@ -27,7 +27,7 @@ class HolidayList:
     #Adds holiday to .innerHolidays parameter.
     #Inputs - new_holiday: Holiday Object
     def addHoliday(self,new_holiday):
-        if type(new_holiday)==type(Holiday('test',datetime.date.today())): #checking if new_holiday is an object
+        if type(new_holiday)==type(Holiday('test',datetime.date.today())): #checking if new_holiday is an object !!!!!isinstance()#=================================================================================================================================
             if new_holiday not in self.innerHolidays: #checking if unique holiday
                 self.innerHolidays.append(new_holiday)
                 print("Inserted object!") #=================================================================================================================================
@@ -54,29 +54,27 @@ class HolidayList:
     
     #Adds holidays into .innerHolidays from a file
     #Inputs - filelocation: a json file path
-    def read_json(self,filelocation): #default filelocation=holidays_output.json
+    def read_json(self,filelocation): #default: holidays_output.json
         with open(filelocation,"r") as f:
             for holiday in json.loads(f.read())['holidays']:
-                self.addHoliday(Holiday(holiday['name'],datetime.datetime.strptime(holiday['date'],'%Y-%m-%d')))
+                self.addHoliday(Holiday(holiday['name'],datetime.date.fromisoformat(holiday['date'])))
 
-holiday1=Holiday("Holiday 1", datetime.date(2021,9,22))
-holiday2=Holiday("Holiday2", datetime.date(2022,5,21))
+    #Writes .innerHolidays into a json file
+    #inputs - filelocation: a json file path
+    def save_to_json(self,filelocation):
+        with open(filelocation,"w") as f:
+            holidays={"holidays":[]}
+            for holiday in self.innerHolidays:
+                holidays["holidays"].append(holiday.__dict__)
+            f.write(json.dumps(holidays,indent=4,default=str))
+
 holidayList=HolidayList()
-holidayList.addHoliday(holiday2)
-print(holidayList.innerHolidays)
-holidayList.addHoliday(holiday1)
-print(holidayList.innerHolidays)
-holidayList.addHoliday(holiday1)
-print(holidayList.innerHolidays)
-holidayList.removeHoliday("Holiday 1", datetime.date(2021,6,22))
-print(holidayList.innerHolidays)
 holidayList.read_json("holidays.json")
-print(holidayList.innerHolidays)
+# print(holidayList.innerHolidays)
+holidayList.save_to_json('holidays_output.json')
+print(holidayList.innerHolidays[0].__dict__)
 
-    # def save_to_json(self,filelocation):
-    #     # Write out json file to selected file. (json.dumps())
-    #     pass
-        
+
     # def scrapeHolidays(self):
     #     # Define years list (202,2021,2022,2023,2024)
     #     # use a for loop with the years list to get every year
