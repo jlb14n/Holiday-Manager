@@ -33,7 +33,7 @@ class HolidayList:
    
     def addHoliday(self,holidayObj):
         # if holidayObj is an object:
-            #insert object into innerHolidays list by using innerHolidays.append(holidayObj) #Maybe use insert and sort to create a sorted list?
+            #if object not in innerHolidays list, insert object (innerHolidays.append(holidayObj))
             #print success statement
         #else:
             #print failure statement

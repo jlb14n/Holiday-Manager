@@ -24,16 +24,40 @@ class HolidayList:
     def __init__(self):
         self.innerHolidays = [] 
    
+    #Adds holiday to .innerHolidays parameter.
+    #Inputs - new_holiday: Holiday Object
     def addHoliday(self,new_holiday):
         if type(new_holiday)==type(Holiday('test',datetime.date.today())): #checking if new_holiday is an object
-            if new_holiday not in self.innerHolidays:
+            if new_holiday not in self.innerHolidays: #checking if unique holiday
                 self.innerHolidays.append(new_holiday)
-                print("Inserted object!")
+                print("Inserted object!") #=================================================================================================================================
             else:
-                print("This holiday is already in!")
+                print("This holiday is already in!") #=================================================================================================================================
         else:
-            print("Not an object!")
-        pass
+            print("Not an object!") #============================================================================================================================================
+    
+    #Outputs Holiday object from .innerHolidays
+    #Inputs - HolidayName: str, Date: datetime.date.
+    def findHoliday(self,HolidayName, Date): 
+        for holiday in self.innerHolidays:
+            if holiday.name==HolidayName and holiday.date==Date:
+                return holiday
+
+    #Removes holiday from .innerHolidays parameter. 
+    #Inputs - HolidayName: str, Date: datetime.date.
+    def removeHoliday(self,HolidayName, Date): 
+        try:
+            self.innerHolidays.remove(self.findHoliday(HolidayName,Date))
+            print("Removed Holiday") #=================================================================================================================================
+        except:
+            print("Could not find Holiday") #=================================================================================================================================
+    
+    #Adds holidays into .innerHolidays from a file
+    #Inputs - filelocation: a json file path
+    def read_json(self,filelocation): #default filelocation=holidays_output.json
+        with open(filelocation,"r") as f:
+            for holiday in json.loads(f.read())['holidays']:
+                self.addHoliday(Holiday(holiday['name'],datetime.datetime.strptime(holiday['date'],'%Y-%m-%d')))
 
 holiday1=Holiday("Holiday 1", datetime.date(2021,9,22))
 holiday2=Holiday("Holiday2", datetime.date(2022,5,21))
@@ -44,37 +68,10 @@ holidayList.addHoliday(holiday1)
 print(holidayList.innerHolidays)
 holidayList.addHoliday(holiday1)
 print(holidayList.innerHolidays)
-
-
-
-
-
-
-
-
-
-    # def findHoliday(self,HolidayName, Date):
-    #     # Find Holiday in innerHolidays (loop with for loop, check with if statement)
-    #     # Return Holiday
-    #     pass
-
-    # def removeHoliday(self,HolidayName, Date):
-    #     #if the Holiday __str__ can be used within innerHolidays.remove(value), 
-    #         #use try: remove 
-    #         #except: print failure
-    #     #otherwise:
-    #         # Find Holiday in innerHolidays by searching the name and date combination. (findHoliday(name,date))
-    #         # remove the Holiday from innerHolidays (use innerHolidays.pop(index))
-    #     # inform user you deleted the holiday (print success statement) return true
-    #     #print failure statement if holiday not found return false
-    #     pass
-
-    # def read_json(self,filelocation):
-    #     # Read in things from json file location, make sure relative path
-    #     # Use json.loads to make a list of dictionaries (each holiday is a dictionary)
-    #     # Make each holiday item from dictionary to Holiday class
-    #     # Use addHoliday function to add holidays to inner list.
-    #     pass
+holidayList.removeHoliday("Holiday 1", datetime.date(2021,6,22))
+print(holidayList.innerHolidays)
+holidayList.read_json("holidays.json")
+print(holidayList.innerHolidays)
 
     # def save_to_json(self,filelocation):
     #     # Write out json file to selected file. (json.dumps())
