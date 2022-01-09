@@ -3,6 +3,7 @@ import json
 from bs4 import BeautifulSoup
 import requests
 from dataclasses import dataclass
+from functools import reduce
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @dataclass
 class Holiday:
@@ -30,7 +31,7 @@ class HolidayList:
         if isinstance(new_holiday,Holiday): #Checking new_holiday is a Holiday object
             if new_holiday not in self.innerHolidays: #checking if unique holiday
                 self.innerHolidays.append(new_holiday)
-                print("Inserted object!") #=================================================================================================================================
+                print("Inserted object!") #======================================================================================================================================
             else:
                 print("This holiday is already in!") #=================================================================================================================================
         else:
@@ -48,7 +49,7 @@ class HolidayList:
     def removeHoliday(self,HolidayName, Date): 
         try:
             self.innerHolidays.remove(self.findHoliday(HolidayName,Date))
-            print("Removed Holiday") #=================================================================================================================================
+            print("Removed Holiday") #========================================================================================================================================
         except:
             print("Could not find Holiday") #=================================================================================================================================
     
@@ -56,8 +57,8 @@ class HolidayList:
     #Inputs - filelocation: str (a json file path)
     def read_json(self,filelocation): #default: holidays_output.json
         with open(filelocation,"r") as f:
-            for holiday in json.loads(f.read())['holidays']:
-                self.addHoliday(Holiday(holiday['name'],datetime.date.fromisoformat(holiday['date'])))
+            for holiday in json.loads(f.read())["holidays"]:
+                self.addHoliday(Holiday(holiday["name"],datetime.date.fromisoformat(holiday["date"])))
 
     #Writes .innerHolidays parameter into a json file
     #inputs - filelocation: str (a json file path)
@@ -68,62 +69,83 @@ class HolidayList:
                 holidays["holidays"].append(holiday.__dict__)
             f.write(json.dumps(holidays,indent=4,default=str))
 
+    #Scrapes all Holidays 2 years ago, this year, and 2 years in the future from timeanddate.com and adds them into .innerHolidays
     def scrapeHolidays(self):
         this_year=datetime.date.today().year
         for year in range(this_year-2,this_year+2):
             html = requests.get(f"https://www.timeanddate.com/holidays/us/{year}").text
-            soup = BeautifulSoup(html,'html.parser')
-            for item in soup.find('table',attrs={'id':'holidays-table'}).find('tbody').find_all('tr'):
+            soup = BeautifulSoup(html,"html.parser")
+            for item in soup.find("table",attrs={"id":"holidays-table"}).find("tbody").find_all("tr"):
                 try:
                     holiday_date=datetime.datetime.strptime(f"{item.find('th').get_text()} {year}","%b %d %Y").date()
-                    holiday_name=item.find('td').next_sibling.get_text()
+                    holiday_name=item.find("td").next_sibling.get_text()
                     self.addHoliday(Holiday(holiday_name,holiday_date))
                 except:
                     continue
+    
+    #Returns the total number of holidays in innerHolidays
+    def numHolidays(self):
+        return len(self.innerHolidays)    
 
-             
+    #Returns list of Holiday objects
+    #Inputs: self.innerHolidays, the year and week_number to filter by
+    def filter_holidays_by_week(self,year, week_number):
+        return list(filter(lambda x: x.date.isocalendar().week==week_number and x.date.isocalendar().year==year, self.innerHolidays))
+
+    #Returns list of dictionaries for a 7 day forecast starting from today
+    def getWeather(self):
+        try:
+            url = "https://community-open-weather-map.p.rapidapi.com/forecast/daily"
+            querystring = {"q":"district of columbia","cnt":"7","units":"imperial"} #=================================================================================
+            headers = { #=============================================================================================================================================
+                "x-rapidapi-host": "community-open-weather-map.p.rapidapi.com",
+                "x-rapidapi-key": "3b625cacbemshf536c40263ff31ap18df15jsn4cb571e5ef73"
+                }
+            response = json.loads(requests.request("GET", url, headers=headers, params=querystring).text)
+            weatherstring={}
+            for day in response["list"]:
+                weatherstring[datetime.datetime.fromtimestamp(day["dt"]).date()]=day["weather"][0]["main"]
+            return weatherstring
+        except:
+            return "Weather API not working" #========================================================================================================================
+
+    #Sorts and prints a list of holidays. If withWeather is true, also prints weather data from getWeather()
+    #Inputs - holidayList: list of Holiday objects, withWeather: boolean (default=False)
+    def displayHolidaysInWeek(self,holidayList,withWeather=False): 
+        sorted_list=[]
+        while len(holidayList)>0: #Sorting the holidayList
+            minimum_holiday = reduce(lambda x1,x2: x1 if x1<x2 else x2, holidayList)
+            sorted_list.append(minimum_holiday)
+            holidayList.remove(minimum_holiday)
+        if withWeather:
+            weather=self.getWeather()
+            for holiday in sorted_list:
+                try:
+                    print(f"{holiday} - {weather[holiday.date]}")
+                except: #Just in case the API breaks
+                    print(f"{holiday} - ERROR")
+                    print(weather)
+        else:
+            for holiday in sorted_list:
+                print(holiday)
+
+    #Filters the .innerHolidays for the current week (today -> 6 days from today) and prints it. If withWeather is true, also prints weather data
+    #Inputs - withWeather: boolean (default=False)
+    def viewCurrentWeek(self,withWeather=False):
+        current_week=[datetime.date.today()]
+        for i in range(1,7):
+            current_week.append(current_week[0]+datetime.timedelta(days=i))
+        holidays_this_week=list(filter(lambda x: x.date in current_week, self.innerHolidays))
+        self.displayHolidaysInWeek(holidays_this_week,withWeather)
+
 holidayList=HolidayList()
 holidayList.read_json("holidays.json")
 holidayList.scrapeHolidays()
 holidayList.save_to_json('holidays_output.json')
-
-
-
-    # def numHolidays(self):
-    #     # Return the total number of holidays in innerHolidays (len())
-    #     pass
-    
-    # def filter_holidays_by_week(self,year, week_number):
-    #     # Use a Lambda function to filter by week number and save this as holidays, use the filter on innerHolidays
-    #         #return list(filter(lambda x: x.date.isocalendar().week==week_number and x.date.isocalendar().year==year, innerHolidays))
-    #     # return your holidays
-    #     pass
-
-    # def displayHolidaysInWeek(self,holidayList,withWeather=False): 
-    #     # Output formated holidays in the week. (sort by date using __gt__)
-    #     # * Remember to use the holiday __str__ method. print(holiday)
-    #     # If withWeather is true
-    #         # weather=getWeather()
-    #         # print(str(holiday) + " - " + weather[holiday.date])
-    #     pass
-
-    # def getWeather(self):
-    #     # https://rapidapi.com/community/api/open-weather-map
-    #     # This API returns a 16 day forecast starting at the current day. Restrict this to return only 7 days.
-    #     # Use Try / Except to catch problems
-    #     # Query API for weather in that week range
-    #     # Format weather information as a dictionary {date1:'weather data', date2:'weather data', ...}and return weather string.
-    #     pass
-
-    # def viewCurrentWeek(self):
-    #     # Use the Datetime Module to look up current week
-    #         #datetime.now().isocalendar().week
-    #     # Use your filter_holidays_by_week function to get the list of holidays 
-    #     # for the current week/year
-    #     # Use your displayHolidaysInWeek function to display the holidays in the week
-    #     # Ask user if they want to get the weather
-    #     # If yes, use your getWeather function and display results
-    #     pass
+print(holidayList.numHolidays())
+print(holidayList.filter_holidays_by_week(2022,4))
+holidayList.displayHolidaysInWeek(holidayList.filter_holidays_by_week(2022,50))
+holidayList.viewCurrentWeek(True)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def menu(): #returns menu selection option
     #read in menu-title.txt and print it

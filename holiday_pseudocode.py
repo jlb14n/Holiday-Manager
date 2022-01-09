@@ -104,8 +104,7 @@ class HolidayList:
         pass
 
     def viewCurrentWeek(self):
-        # Use the Datetime Module to look up current week
-            #datetime.now().isocalendar().week
+        # Use the Datetime Module to calculate the current week (since today may not be Monday, and the datetime module for week starts on Monday)
         # Use your filter_holidays_by_week function to get the list of holidays 
         # for the current week/year
         # Use your displayHolidaysInWeek function to display the holidays in the week
