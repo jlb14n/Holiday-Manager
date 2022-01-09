@@ -137,16 +137,8 @@ class HolidayList:
             current_week.append(current_week[0]+datetime.timedelta(days=i))
         holidays_this_week=list(filter(lambda x: x.date in current_week, self.innerHolidays))
         self.displayHolidaysInWeek(holidays_this_week,withWeather)
-
-holidayList=HolidayList()
-holidayList.read_json("holidays.json")
-holidayList.scrapeHolidays()
-holidayList.save_to_json('holidays_output.json')
-print(holidayList.numHolidays())
-print(holidayList.filter_holidays_by_week(2022,4))
-holidayList.displayHolidaysInWeek(holidayList.filter_holidays_by_week(2022,50))
-holidayList.viewCurrentWeek(True)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#Functions
 def menu(): #returns menu selection option
     #read in menu-title.txt and print it
     #read in menu.txt and print it
@@ -190,58 +182,33 @@ def exitMenu(isSaved): #returns true or false depending on if user wants to exit
     #request input for wanting to leave
         #return true if yes
     pass
-
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#Main function
 def main():
-    # Large Pseudo Code steps
-    # -------------------------------------
-    # 1. Initialize HolidayList Object
-        #holidays=HolidayList()
-    # 2. Load JSON file via HolidayList read_json function
-        #holidays.readjson(file)
-    # 3. Scrape additional holidays using your HolidayList scrapeHolidays function.
-        #holidays.scrapeHolidays()
-    # 3. Create while loop for user to keep adding or working with the Calender
-    # 4. Create isSaved variable, initialize as False
-        # 4. Display User Menu and take user input for their action based on Menu and check the user input for errors (menu()) 
-        # 5. Run appropriate method from the HolidayList object depending on what the user input is
-        # 6. Ask the User if they would like to Continue, if not, end the while loop, ending the program.  If they do wish to continue, keep the program going. 
-            #selection=menu():
-                #if menu==selection:
-                    #if addHolidayMenu():
-                        #isSaved=False
-                #if menu==selection:
-                    #if removeHolidayMenu():
-                        #isSaved=False
-                #if menu==selection:
-                    #if saveHolidayMenu():
-                        #isSaved=True
-                #if menu==selection:
-                    #viewHolidayMenu()
-                #if menu==selection:
-                    #if exitMenu(saved)
-                        #break
-                    
-    pass
+    holidays=HolidayList()
+    holidays.read_json("holidays.json")
+    holidays.scrapeHolidays()
+    isSaved=False
+    while True:
+        break
+        #selection=menu():
+        #if selection==1:
+            #if addHolidayMenu():
+                #isSaved=False
+        #if selection==2:
+            #if removeHolidayMenu():
+                #isSaved=False
+        #if selection==3:
+            #if saveHolidayMenu():
+                #isSaved=True
+        #if selection==4:
+            #viewHolidayMenu()
+        #if selection==5:
+            #if exitMenu(saved)
+                #break
 
 if __name__ == "__main__":
     main()
-
-
-# Additional Hints:
-# ---------------------------------------------
-# You may need additional helper functions both in and out of the classes, add functions as you need to.
-#
-# No one function should be more then 50 lines of code, if you need more then 50 lines of code
-# excluding comments, break the function into multiple functions.
-#
-# You can store your raw menu text, and other blocks of texts as raw text files 
-# and use placeholder values with the format option.
-# Example:
-# In the file test.txt is "My name is {fname}, I'm {age}"
-# Then you later can read the file into a string "filetxt"
-# and substitute the placeholders 
-# for example: filetxt.format(fname = "John", age = 36)
-# This will make your code far more readable, by seperating text from code.
 
 
 
