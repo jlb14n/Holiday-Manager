@@ -68,21 +68,26 @@ class HolidayList:
                 holidays["holidays"].append(holiday.__dict__)
             f.write(json.dumps(holidays,indent=4,default=str))
 
+    def scrapeHolidays(self):
+        this_year=datetime.date.today().year
+        for year in range(this_year-2,this_year+2):
+            html = requests.get(f"https://www.timeanddate.com/holidays/us/{year}").text
+            soup = BeautifulSoup(html,'html.parser')
+            for item in soup.find('table',attrs={'id':'holidays-table'}).find('tbody').find_all('tr'):
+                try:
+                    holiday_date=datetime.datetime.strptime(f"{item.find('th').get_text()} {year}","%b %d %Y").date()
+                    holiday_name=item.find('td').next_sibling.get_text()
+                    self.addHoliday(Holiday(holiday_name,holiday_date))
+                except:
+                    continue
+
+             
 holidayList=HolidayList()
 holidayList.read_json("holidays.json")
-holidayList.addHoliday(100)
+holidayList.scrapeHolidays()
 holidayList.save_to_json('holidays_output.json')
 
-    # def scrapeHolidays(self):
-    #     # Define years list (202,2021,2022,2023,2024)
-    #     # use a for loop with the years list to get every year
-    #         # Scrape Holidays from https://www.timeanddate.com/holidays/us/{year} 
-    #             #Use a for loop to cycle through each <tr> (#in table id="holidays-table" #in <tbody>)
-    #                 #<th> is the date, second <td> is the name of the holiday
-    #                 # Check to see if name and date of holiday is in innerHolidays array (if findHoliday)
-    #                 # Add non-duplicates to innerHolidays ()
-    #     # Handle any exceptions.
-    #     pass     
+
 
     # def numHolidays(self):
     #     # Return the total number of holidays in innerHolidays (len())
