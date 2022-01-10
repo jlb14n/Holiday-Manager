@@ -217,13 +217,13 @@ def removeHolidayMenu(holidayList): #returns true or false depending on if a hol
                 return False
             print('')
 
-#Saves holidayList to a json file as requested. Returns true or fdalse depending on if the holidays were saved
+#Saves holidayList to a json file as requested. Returns true or false depending on if the holidays were saved
 #Input -  holidayList: HolidayList object
 def saveHolidayMenu(holidayList):
     titlemsg("Saving Holiday List")
     while True:
         selection=input("Are you sure you want to save your changes? [y/n]: ")
-        if selection=='y':
+        if selection.lower()=='y':
             filename=input("Input desired file name (leave blank for 'holidays_output.json'): ")
             if filename == "":
                 filename="holidays_output.json"
@@ -231,7 +231,7 @@ def saveHolidayMenu(holidayList):
             successmsg("Your changes have been saved.")
             print("There are {0} holidays stored in {1}".format(holidayList.numHolidays(),filename))
             return True
-        elif selection=='n':
+        elif selection.lower()=='n':
             print("Canceled:")
             print("Holiday list file save canceled.")
             return False
@@ -257,11 +257,11 @@ def viewHolidayMenu(holidayList):
             if week=="" and year==datetime.date.today().year:
                 while True:
                     selection=input("Would you like to see this week's weather? [y/n]: ")
-                    if selection == "y":
+                    if selection.lower() == "y":
                         print("\nThese are the holidays for this week:")
                         holidayList.viewCurrentWeek(True)
                         return
-                    elif selection == "n":
+                    elif selection.lower() == "n":
                         print("\nThese are the holidays for this week:")
                         holidayList.viewCurrentWeek(False)
                         return
