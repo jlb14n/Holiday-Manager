@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import requests
 from dataclasses import dataclass
 from functools import reduce
+import os
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @dataclass
 class Holiday:
@@ -25,33 +26,33 @@ class HolidayList:
     def __init__(self):
         self.innerHolidays = [] 
    
-    #Adds holiday to .innerHolidays parameter.
+    #Adds holiday to .innerHolidays parameter. Returns true or false if holiday added 
     #Inputs - new_holiday: Holiday Object
     def addHoliday(self,new_holiday):
         if isinstance(new_holiday,Holiday): #Checking new_holiday is a Holiday object
             if new_holiday not in self.innerHolidays: #checking if unique holiday
                 self.innerHolidays.append(new_holiday)
-                print("Inserted object!") #======================================================================================================================================
+                return True
             else:
-                print("This holiday is already in!") #=================================================================================================================================
+                return False #This holiday is already in!
         else:
-            print("Not a Holiday object!") #============================================================================================================================================
+            return False #Not a Holiday object!
     
-    #Outputs Holiday object from .innerHolidays
+    #Outputs Holiday object from .innerHolidays. 
     #Inputs - HolidayName: str, Date: datetime.date.
     def findHoliday(self,HolidayName, Date): 
         for holiday in self.innerHolidays:
             if holiday.name==HolidayName and holiday.date==Date:
                 return holiday
 
-    #Removes holiday from .innerHolidays parameter. 
+    #Removes holiday from .innerHolidays parameter. Returns true or false if holiday removed
     #Inputs - HolidayName: str, Date: datetime.date.
     def removeHoliday(self,HolidayName, Date): 
         try:
             self.innerHolidays.remove(self.findHoliday(HolidayName,Date))
-            print("Removed Holiday") #========================================================================================================================================
+            return True
         except:
-            print("Could not find Holiday") #=================================================================================================================================
+            return False
     
     #Adds holidays into .innerHolidays from a file
     #Inputs - filelocation: str (a json file path)
@@ -139,73 +140,182 @@ class HolidayList:
         self.displayHolidaysInWeek(holidays_this_week,withWeather)
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #Functions
+#Prints out title message from file
+#Input - msg: str title description
+def titlemsg(msg):
+    with open(r'texts\menu-title.txt',"r") as f:
+        print(f.read().format(title=msg))
+
+#Prints out an error message from file
+#Input - msg: str error description
+def errormsg(msg):
+    with open(r'texts\error.txt',"r") as f:
+        print(f.read().format(desc=msg))
+
+#Prints out a success message from file
+#Input - msg: str success description
+def successmsg(msg):
+    with open(r'texts\success.txt',"r") as f:
+        print(f.read().format(desc=msg))
+
+#Returns menu selection after printing the menu and validating selection
 def menu(): #returns menu selection option
-    #read in menu-title.txt and print it
-    #read in menu.txt and print it
-    #request user input
-    #validate correct user input, continue to prompt if not valid
-    #return input
-    pass
+    titlemsg("Holiday Menu")
+    with open(r'texts\menu-options.txt',"r") as file:
+        print(file.read())
+    while True:
+        selection=input("Menu selection: ")
+        try:
+            if int(selection)<=5:
+                return int(selection)
+            else:
+                errormsg("Invalid selection: integer too large.")
+        except:
+            errormsg("Invalid input: not an integer.")
 
-def addHolidayMenu(): #returns true or false depending on if a holiday was added
-    #read in menu-title.txt and print it
-    #request user input for holiday and date
-        #validate correct user input, continue to prompt if not valid
-        #convert input to Holiday object
-    #addHoliday(input)
-    pass
+#Adds inputted holiday is added into holidayList. Returns true or false depending on whether holiday was added
+#Input -  holidayList: HolidayList object
+def addHolidayMenu(holidayList):
+    titlemsg("Add a Holiday")
+    holiday=input("Holiday: ")
+    date=input("Date (yyyy-mm-dd): ")
+    while True:
+        try: 
+            date=datetime.date.fromisoformat(date)
+            break
+        except: 
+            errormsg("Invalid date. Please try again.")
+            date=input("Date for {0} (yyyy-mm-dd): ".format(holiday))
+    holiday_obj=Holiday(holiday,date)
+    if holidayList.addHoliday(holiday_obj):
+        successmsg(f"{holiday_obj} has been added to the holiday list.")
+        return True
+    else:
+        errormsg(f"{holiday_obj} is already in the holiday list")
+        return False
 
-def removeHolidayMenu(): #returns true or false depending on if a holiday was removed
-    #read in menu-title.txt and print it
-    #request user input for holiday and date
-    #validate correct user input, continue to prompt if not valid
-    #stay in loop until removeHoliday(name,date) succeeds
-    #if it fails, add a way for user to escape loop if they no longer wish to remove a holiday
-    pass
+#Removes inputted holiday is added into holidayList. Returns true or false depending on whether holiday was removed
+#Input -  holidayList: HolidayList object
+def removeHolidayMenu(holidayList): #returns true or false depending on if a holiday was removed
+    titlemsg("Remove a Holiday")
+    while True:
+        holiday=input("Holiday Name: ")
+        date=input("Date (yyyy-mm-dd): ")
+        while True:
+            try: 
+                date=datetime.date.fromisoformat(date)
+                break
+            except: 
+                errormsg("Invalid date. Please try again.")
+                date=input("Date for {0} (yyyy-mm-dd): ".format(holiday))
+        if holidayList.removeHoliday(holiday,date):
+            successmsg(f"{Holiday(holiday,date)} has been removed from the holiday list.")
+            return True
+        else:
+            errormsg(f"{Holiday(holiday,date)} not found.")
+            if input("Would you like to return to the main menu? (yes=1): ")=="1":
+                return False
+            print('')
 
-def saveHolidayMenu(): #returns true or false depending on if holidays were saved
-    #read in menu-title.txt and print it
-    #request user input y/n 
-    #if y: request filename, save_to_json(filename)
-    pass
+#Saves holidayList to a json file as requested. Returns true or fdalse depending on if the holidays were saved
+#Input -  holidayList: HolidayList object
+def saveHolidayMenu(holidayList):
+    titlemsg("Saving Holiday List")
+    while True:
+        selection=input("Are you sure you want to save your changes? [y/n]: ")
+        if selection=='y':
+            filename=input("Input desired file name (leave blank for 'holidays_output.json'): ")
+            if filename == "":
+                filename="holidays_output.json"
+            holidayList.save_to_json(filename)
+            successmsg("Your changes have been saved.")
+            print("There are {0} holidays stored in {1}".format(holidayList.numHolidays(),filename))
+            return True
+        elif selection=='n':
+            print("Canceled:")
+            print("Holiday list file save canceled.")
+            return False
+        else:
+            errormsg("Not a valid input. Please try again.")
 
-def viewHolidayMenu():
-    #read in menu-title.txt and print it
-    #request user for year and week, check for valid responses (blank, 1-52)
-    #if week is left blank, viewCurrentWeek()
-    #else: displayHolidaysInWeek(filter_holidays_by_week(year,week_number))
-    pass
+#Print a week of holidays based on year or week. Can also print this week's with weather
+#Input -  holidayList: HolidayList object
+def viewHolidayMenu(holidayList):
+    titlemsg("View Holidays")
+    while True:
+        year=input("Which year?: ")
+        try: 
+            year=int(year)
+            break
+        except: errormsg("Invalid input: not an integer.")
+    while True:
+        if year==datetime.date.today().year:
+            week=input("Which week? #[1-52, Leave blank for the current week]: ")
+        else:
+            week=input("Which week? #[1-52]: ")
+        try:
+            if week=="" and year==datetime.date.today().year:
+                while True:
+                    selection=input("Would you like to see this week's weather? [y/n]: ")
+                    if selection == "y":
+                        print("\nThese are the holidays for this week:")
+                        holidayList.viewCurrentWeek(True)
+                        return
+                    elif selection == "n":
+                        print("\nThese are the holidays for this week:")
+                        holidayList.viewCurrentWeek(False)
+                        return
+                    else:
+                        errormsg("Not a valid input. Please try again.")
+            elif int(week)>0 and int(week)<53:
+                print(f"\nThese are the holidays for {year} week #{week}:")
+                holidayList.displayHolidaysInWeek(holidayList.filter_holidays_by_week(year,int(week)))
+                return
+            else:
+                errormsg("Invalid input: integer not between 1 and 52. Please try again.")
+        except:
+            errormsg("Invalid input: not an integer.")
 
+#Exits the program. Returns true or false depending if the user wishes to exit. Changes text depending on if changes have been saved.
+#Input - isSaved: boolean
 def exitMenu(isSaved): #returns true or false depending on if user wants to exit
-    #read in menu-title.txt and print it
-    #change text depending on if isSaved is true or false
-    #request input for wanting to leave
-        #return true if yes
-    pass
+    titlemsg("Exit")
+    print("Are you sure you want to exit?")
+    if not isSaved:
+        print("Your changes will be lost.")
+    while True:
+        selection=input("[y/n] ")
+        if selection.lower()=="y":
+            return True
+        elif selection.lower()=="n":
+            return False
+        else:
+            errormsg("Not a valid input. Please try again.")
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #Main function
 def main():
+    titlemsg("Holiday Management")
     holidays=HolidayList()
     holidays.read_json("holidays.json")
+    print("There are {0} holidays stored in holidays.json.".format(holidays.numHolidays()))
     holidays.scrapeHolidays()
     isSaved=False
     while True:
-        break
-        #selection=menu():
-        #if selection==1:
-            #if addHolidayMenu():
-                #isSaved=False
-        #if selection==2:
-            #if removeHolidayMenu():
-                #isSaved=False
-        #if selection==3:
-            #if saveHolidayMenu():
-                #isSaved=True
-        #if selection==4:
-            #viewHolidayMenu()
-        #if selection==5:
-            #if exitMenu(saved)
-                #break
+        selection=menu()
+        if selection==1:
+            if addHolidayMenu(holidays):
+                isSaved=False
+        if selection==2:
+            if removeHolidayMenu(holidays):
+                isSaved=False
+        if selection==3:
+            if saveHolidayMenu(holidays):
+                isSaved=True
+        if selection==4:
+            viewHolidayMenu(holidays)
+        if selection==5:
+            if exitMenu(isSaved):
+                break
 
 if __name__ == "__main__":
     main()
